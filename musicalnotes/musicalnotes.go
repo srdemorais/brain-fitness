@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-var notes = [...]string{"C2", "Db2", "D2", "Eb2", "E2", "F2", "Gb2", "G2", "Ab2", "A2", "Bb2", "B2", "C3", "Db3", "D3", "Eb3", "E3", "F3", "Gb3", "G3", "Ab3", "A3", "Bb3", "B3", "C4", "Db4", "D4", "Eb4", "E4", "F4", "Gb4", "G4", "Ab4", "A4", "Bb4", "B4", "C5", "Db5", "D5", "Eb5", "E5", "F5", "Gb5", "G5", "Ab5", "A5", "Bb5", "B5", "C6"}
-var notesPos = [...]int{1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 7, 8, 9, 9, 10, 10, 11, 12, 12, 13, 13, 14, 14, 15, 16, 16, 17, 17, 18, 19, 19, 20, 20, 21, 21, 22, 23, 23, 24, 24, 25, 26, 26, 27, 27, 28, 28, 29}
+var NotesArray = [...]string{"C2", "Db2", "D2", "Eb2", "E2", "F2", "Gb2", "G2", "Ab2", "A2", "Bb2", "B2", "C3", "Db3", "D3", "Eb3", "E3", "F3", "Gb3", "G3", "Ab3", "A3", "Bb3", "B3", "C4", "Db4", "D4", "Eb4", "E4", "F4", "Gb4", "G4", "Ab4", "A4", "Bb4", "B4", "C5", "Db5", "D5", "Eb5", "E5", "F5", "Gb5", "G5", "Ab5", "A5", "Bb5", "B5", "C6"}
+var NotesPosArray = [...]int{1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 7, 8, 9, 9, 10, 10, 11, 12, 12, 13, 13, 14, 14, 15, 16, 16, 17, 17, 18, 19, 19, 20, 20, 21, 21, 22, 23, 23, 24, 24, 25, 26, 26, 27, 27, 28, 28, 29}
 
 type MusicalNote struct {
 	Idx          int    `json:"idx"` // Add JSON tags for easy serialization
@@ -22,17 +22,17 @@ type MusicalNote struct {
 
 func Init() MusicalNote {
 	rand.Seed(time.Now().UnixNano()) // Use UnixNano for better randomness in quick succession
-	idx := rand.Intn(len(notes))
+	idx := rand.Intn(len(NotesArray))
 
 	var oMusicalNote MusicalNote
 	oMusicalNote.Idx = idx
-	oMusicalNote.Note = notes[idx]
-	oMusicalNote.AudioPath = "/audio/" + notes[idx] + ".mp3" // Change path to match Gin static server
+	oMusicalNote.Note = NotesArray[idx]
+	oMusicalNote.AudioPath = "/audio/" + NotesArray[idx] + ".mp3" // Change path to match Gin static server
 
 	// Pre-calculate next, previous, and position for the API response
 	oMusicalNote.NextNote = oMusicalNote.GetNext()
 	oMusicalNote.PreviousNote = oMusicalNote.GetPrevious()
-	oMusicalNote.Position = notesPos[idx]
+	oMusicalNote.Position = NotesPosArray[idx]
 
 	return oMusicalNote
 }
@@ -52,7 +52,7 @@ func (n *MusicalNote) GetNext() string {
 	if n.Note == "C6" {
 		next = "Db6" // Or potentially a custom "end of range" note
 	} else {
-		next = notes[n.Idx+1]
+		next = NotesArray[n.Idx+1]
 	}
 	return next
 }
@@ -68,14 +68,14 @@ func (n *MusicalNote) GetPrevious() string {
 	if n.Note == "C2" {
 		previous = "B1" // Or potentially a custom "start of range" note
 	} else {
-		previous = notes[n.Idx-1]
+		previous = NotesArray[n.Idx-1]
 	}
 	return previous
 }
 
 // CheckPosition refactored to take user input and return result
 func (n *MusicalNote) CheckPosition(userInput int) bool {
-	return notesPos[n.Idx] == userInput
+	return NotesPosArray[n.Idx] == userInput
 }
 
 // CheckSound will be heavily refactored. For now, this is a placeholder.
@@ -100,7 +100,7 @@ func (n *MusicalNote) GetGuessNotes() ([6]MusicalNote, int) { // Exported for AP
 
 	p := 1
 	for {
-		tmpIdx := rand.Intn(len(notes))
+		tmpIdx := rand.Intn(len(NotesArray))
 		// Ensure unique notes and don't pick the same note as the current one too many times
 		isUnique := true
 		for i := 0; i < p; i++ {
@@ -124,9 +124,9 @@ func (n *MusicalNote) GetGuessNotes() ([6]MusicalNote, int) { // Exported for AP
 	// set guessNotes
 	for i := 0; i < 6; i++ {
 		guessNotes[i].Idx = randPos[i]
-		guessNotes[i].Note = notes[randPos[i]]
-		guessNotes[i].AudioPath = "/audio/" + notes[randPos[i]] + ".mp3" // Change path for frontend
-		guessNotes[i].Position = notesPos[randPos[i]]                    // Add position for frontend
+		guessNotes[i].Note = NotesArray[randPos[i]]
+		guessNotes[i].AudioPath = "/audio/" + NotesArray[randPos[i]] + ".mp3" // Change path for frontend
+		guessNotes[i].Position = NotesPosArray[randPos[i]]                    // Add position for frontend
 		if n.Note == guessNotes[i].Note {
 			pos = i
 		}
@@ -137,16 +137,16 @@ func (n *MusicalNote) GetGuessNotes() ([6]MusicalNote, int) { // Exported for AP
 
 // GetNoteNameByIdx returns the note string for a given index
 func GetNoteNameByIdx(idx int) string {
-	if idx >= 0 && idx < len(notes) {
-		return notes[idx]
+	if idx >= 0 && idx < len(NotesArray) {
+		return NotesArray[idx]
 	}
 	return "" // Or handle error appropriately
 }
 
 // GetNotePositionByIdx returns the note position for a given index
 func GetNotePositionByIdx(idx int) int {
-	if idx >= 0 && idx < len(notesPos) {
-		return notesPos[idx]
+	if idx >= 0 && idx < len(NotesPosArray) {
+		return NotesPosArray[idx]
 	}
 	return 0 // Or handle error appropriately
 }

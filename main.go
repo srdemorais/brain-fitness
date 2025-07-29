@@ -1,4 +1,14 @@
-// musical-ear-trainer/main.go
+// $ curl -X POST http://localhost:8080/api/note/new
+// {"idx":3,"note":"Eb2","audioPath":"/audio/Eb2.mp3","nextNote":"E2","previousNote":"D2","position":3}
+
+// $ curl -X POST -H "Content-Type: application/json" -d '{
+//     "noteIdx": 7,
+//     "userNext": "Ab2",
+//     "userPrevious": "Gb2",
+//     "userPosition": 5
+// }' http://localhost:8080/api/note/check_text_position
+// {"nextCorrect":true,"previousCorrect":true,"positionCorrect":true}
+
 package main
 
 import (
