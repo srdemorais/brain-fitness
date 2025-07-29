@@ -1,0 +1,24 @@
+# .gitignore
+# Binaries for programs
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*-test
+*-test.exe
+
+# Compiled Go packages
+*.a
+
+# IDE files
+.vscode/
+.idea/
+
+# Go module cache (usually in GOPATH/pkg/mod)
+# This is handled by go mod download, no need to commit
+# vendor/ # if you were using vendor mode, you might ignore this
+
+# Environment variables
+.env
