@@ -9,6 +9,19 @@
 // }' http://localhost:8080/api/note/check_text_position
 // {"nextCorrect":true,"previousCorrect":true,"positionCorrect":true}
 
+// curl -X POST \
+//      -H "Content-Type: application/json" \
+//      -d '{"noteIdx": 1}' \
+//      http://localhost:8080/api/note/prepare_sound_test
+
+// curl -X POST \
+//      -H "Content-Type: application/json" \
+//      -d '{
+//            "correctGuessPos": 2,
+//            "userSoundGuessPos": 2
+//          }' \
+//      http://localhost:8080/api/note/check_sound_guess
+
 package main
 
 import (
@@ -24,20 +37,14 @@ import (
 
 // CheckTextPositionRequest represents the JSON payload for checking text/position answers
 type CheckTextPositionRequest struct {
-	NoteIdx      int    `json:"noteIdx"` // Index of the original note
-	UserNext     string `json:"userNext"`
-	UserPrevious string `json:"userPrevious"`
-	UserPosition int    `json:"userPosition"`
+	NoteIdx      int `json:"noteIdx"` // Index of the original note
+	UserPosition int `json:"userPosition"`
 }
 
 // CheckTextPositionResponse represents the JSON response for text/position checks
 type CheckTextPositionResponse struct {
-	NextCorrect     bool   `json:"nextCorrect"`
-	CorrectNext     string `json:"correctNext,omitempty"` // omitempty means it won't be included if empty (i.e., if correct)
-	PreviousCorrect bool   `json:"previousCorrect"`
-	CorrectPrevious string `json:"correctPrevious,omitempty"`
-	PositionCorrect bool   `json:"positionCorrect"`
-	CorrectPosition int    `json:"correctPosition,omitempty"`
+	PositionCorrect bool `json:"positionCorrect"`
+	CorrectPosition int  `json:"correctPosition,omitempty"` // omitempty means it won't be included if empty (i.e., if correct)
 }
 
 // PrepareSoundTestRequest represents the JSON payload for preparing the sound test
@@ -82,7 +89,7 @@ func main() {
 	// --- End CORS Setup ---
 
 	// Serve static MP3 files from the /mp3 directory under the /audio path
-	router.Static("/audio", "./mp3")
+	router.Static("/audio", "./musicalnotes/mp3")
 
 	// --- API Endpoints ---
 
@@ -109,23 +116,13 @@ func main() {
 		}
 
 		// Perform checks
-		nextCorrect := currentNote.CheckNext(req.UserNext)
-		previousCorrect := currentNote.CheckPrevious(req.UserPrevious)
 		positionCorrect := currentNote.CheckPosition(req.UserPosition)
 
 		resp := CheckTextPositionResponse{
-			NextCorrect:     nextCorrect,
-			PreviousCorrect: previousCorrect,
 			PositionCorrect: positionCorrect,
 		}
 
 		// If incorrect, provide the correct answer
-		if !nextCorrect {
-			resp.CorrectNext = currentNote.GetNext()
-		}
-		if !previousCorrect {
-			resp.CorrectPrevious = currentNote.GetPrevious()
-		}
 		if !positionCorrect {
 			resp.CorrectPosition = musicalnotes.GetNotePositionByIdx(req.NoteIdx) // Helper needed: see note below
 		}

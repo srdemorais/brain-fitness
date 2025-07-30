@@ -54,20 +54,10 @@ func setupRouter() *gin.Engine {
 			Note: musicalnotes.GetNoteNameByIdx(req.NoteIdx),
 		}
 
-		nextCorrect := currentNote.CheckNext(req.UserNext)
-		previousCorrect := currentNote.CheckPrevious(req.UserPrevious)
 		positionCorrect := currentNote.CheckPosition(req.UserPosition)
 
 		resp := CheckTextPositionResponse{
-			NextCorrect:     nextCorrect,
-			PreviousCorrect: previousCorrect,
 			PositionCorrect: positionCorrect,
-		}
-		if !nextCorrect {
-			resp.CorrectNext = currentNote.GetNext()
-		}
-		if !previousCorrect {
-			resp.CorrectPrevious = currentNote.GetPrevious()
 		}
 		if !positionCorrect {
 			resp.CorrectPosition = musicalnotes.GetNotePositionByIdx(req.NoteIdx)
@@ -122,8 +112,6 @@ func TestNewNoteEndpoint(t *testing.T) {
 	assert.Less(t, note.Idx, len(musicalnotes.NotesArray)) // Assuming you expose notes array for test or mock it
 	assert.NotEmpty(t, note.Note)
 	assert.Contains(t, note.AudioPath, "/audio/")
-	assert.NotEmpty(t, note.NextNote)
-	assert.NotEmpty(t, note.PreviousNote)
 	assert.Greater(t, note.Position, 0)
 }
 
@@ -134,8 +122,6 @@ func TestCheckTextPositionEndpoint(t *testing.T) {
 	correctNoteIdx := 24 // C4 (Next: Db4, Previous: B3, Pos: 15)
 	correctReqBody, _ := json.Marshal(CheckTextPositionRequest{
 		NoteIdx:      correctNoteIdx,
-		UserNext:     "Db4",
-		UserPrevious: "B3",
 		UserPosition: 15,
 	})
 	w1 := httptest.NewRecorder()
@@ -146,18 +132,12 @@ func TestCheckTextPositionEndpoint(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w1.Code)
 	var resp1 CheckTextPositionResponse
 	json.Unmarshal(w1.Body.Bytes(), &resp1)
-	assert.True(t, resp1.NextCorrect)
-	assert.True(t, resp1.PreviousCorrect)
 	assert.True(t, resp1.PositionCorrect)
-	assert.Empty(t, resp1.CorrectNext)        // Should be empty if correct
-	assert.Empty(t, resp1.CorrectPrevious)    // Should be empty if correct
 	assert.Equal(t, 0, resp1.CorrectPosition) // For int, omitempty usually means 0
 
 	// --- Test Case 2: One incorrect answer (UserNext is wrong) ---
 	incorrectNextReqBody, _ := json.Marshal(CheckTextPositionRequest{
 		NoteIdx:      correctNoteIdx,
-		UserNext:     "D4", // Incorrect
-		UserPrevious: "B3",
 		UserPosition: 15,
 	})
 	w2 := httptest.NewRecorder()
@@ -168,11 +148,7 @@ func TestCheckTextPositionEndpoint(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w2.Code)
 	var resp2 CheckTextPositionResponse
 	json.Unmarshal(w2.Body.Bytes(), &resp2)
-	assert.False(t, resp2.NextCorrect)
-	assert.True(t, resp2.PreviousCorrect)
 	assert.True(t, resp2.PositionCorrect)
-	assert.Equal(t, "Db4", resp2.CorrectNext) // Should provide correct answer
-	assert.Empty(t, resp2.CorrectPrevious)
 	assert.Equal(t, 0, resp2.CorrectPosition) // For int, omitempty usually means 0
 }
 

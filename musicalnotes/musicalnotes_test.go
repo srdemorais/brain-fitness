@@ -8,48 +8,6 @@ import (
 	"testing"
 )
 
-func TestGetNext(t *testing.T) {
-	tests := []struct {
-		name     string
-		note     MusicalNote
-		expected string
-	}{
-		{"Middle Note", MusicalNote{Note: "C4", Idx: 24}, "Db4"},
-		{"Last Note (C6)", MusicalNote{Note: "C6", Idx: len(NotesArray) - 1}, "Db6"}, // Edge case
-		{"Before Last Note (B5)", MusicalNote{Note: "B5", Idx: len(NotesArray) - 2}, "C6"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := tt.note.GetNext()
-			if actual != tt.expected {
-				t.Errorf("GetNext(%s): expected %s, got %s", tt.note.Note, tt.expected, actual)
-			}
-		})
-	}
-}
-
-func TestGetPrevious(t *testing.T) {
-	tests := []struct {
-		name     string
-		note     MusicalNote
-		expected string
-	}{
-		{"Middle Note", MusicalNote{Note: "C4", Idx: 24}, "B3"},
-		{"First Note (C2)", MusicalNote{Note: "C2", Idx: 0}, "B1"}, // Edge case
-		{"After First Note (Db2)", MusicalNote{Note: "Db2", Idx: 1}, "C2"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := tt.note.GetPrevious()
-			if actual != tt.expected {
-				t.Errorf("GetPrevious(%s): expected %s, got %s", tt.note.Note, tt.expected, actual)
-			}
-		})
-	}
-}
-
 func TestGetNoteNameByIdx(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -96,50 +54,6 @@ func TestGetNotePositionByIdx(t *testing.T) {
 	}
 }
 
-func TestCheckNext(t *testing.T) {
-	note := MusicalNote{Note: "C4", Idx: 24} // Next is Db4
-	tests := []struct {
-		name    string
-		input   string
-		correct bool
-	}{
-		{"Correct Guess", "Db4", true},
-		{"Correct Guess Case-Insensitive", "db4", true},
-		{"Incorrect Guess", "D4", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := note.CheckNext(tt.input)
-			if actual != tt.correct {
-				t.Errorf("CheckNext with input '%s': expected %v, got %v", tt.input, tt.correct, actual)
-			}
-		})
-	}
-}
-
-func TestCheckPrevious(t *testing.T) {
-	note := MusicalNote{Note: "C4", Idx: 24} // Previous is B3
-	tests := []struct {
-		name    string
-		input   string
-		correct bool
-	}{
-		{"Correct Guess", "B3", true},
-		{"Correct Guess Case-Insensitive", "b3", true},
-		{"Incorrect Guess", "C3", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := note.CheckPrevious(tt.input)
-			if actual != tt.correct {
-				t.Errorf("CheckPrevious with input '%s': expected %v, got %v", tt.input, tt.correct, actual)
-			}
-		})
-	}
-}
-
 func TestCheckPosition(t *testing.T) {
 	note := MusicalNote{Note: "C4", Idx: 24} // Position is 15
 	tests := []struct {
@@ -172,8 +86,8 @@ func TestInit(t *testing.T) {
 	if !strings.HasPrefix(note.AudioPath, "/audio/") || !strings.HasSuffix(note.AudioPath, ".mp3") {
 		t.Errorf("Init: AudioPath '%s' has incorrect format", note.AudioPath)
 	}
-	if note.NextNote == "" || note.PreviousNote == "" || note.Position == 0 {
-		t.Errorf("Init: NextNote, PreviousNote, or Position not correctly populated: %+v", note)
+	if note.Position == 0 {
+		t.Errorf("Init: Position not correctly populated: %+v", note)
 	}
 }
 

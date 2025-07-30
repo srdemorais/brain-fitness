@@ -4,7 +4,6 @@ package musicalnotes
 import (
 	"fmt"
 	"math/rand"
-	"strings"
 	"time"
 )
 
@@ -12,12 +11,10 @@ var NotesArray = [...]string{"C2", "Db2", "D2", "Eb2", "E2", "F2", "Gb2", "G2", 
 var NotesPosArray = [...]int{1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 7, 8, 9, 9, 10, 10, 11, 12, 12, 13, 13, 14, 14, 15, 16, 16, 17, 17, 18, 19, 19, 20, 20, 21, 21, 22, 23, 23, 24, 24, 25, 26, 26, 27, 27, 28, 28, 29}
 
 type MusicalNote struct {
-	Idx          int    `json:"idx"` // Add JSON tags for easy serialization
-	Note         string `json:"note"`
-	AudioPath    string `json:"audioPath"`
-	NextNote     string `json:"nextNote"`     // New field to pre-calculate for API
-	PreviousNote string `json:"previousNote"` // New field to pre-calculate for API
-	Position     int    `json:"position"`     // New field to pre-calculate for API
+	Idx       int    `json:"idx"` // Add JSON tags for easy serialization
+	Note      string `json:"note"`
+	AudioPath string `json:"audioPath"`
+	Position  int    `json:"position"`
 }
 
 func Init() MusicalNote {
@@ -30,47 +27,9 @@ func Init() MusicalNote {
 	oMusicalNote.AudioPath = "/audio/" + NotesArray[idx] + ".mp3" // Change path to match Gin static server
 
 	// Pre-calculate next, previous, and position for the API response
-	oMusicalNote.NextNote = oMusicalNote.GetNext()
-	oMusicalNote.PreviousNote = oMusicalNote.GetPrevious()
 	oMusicalNote.Position = NotesPosArray[idx]
 
 	return oMusicalNote
-}
-
-// NOTE: TestUser, CheckNext, CheckPrevious, CheckPosition, CheckSound will be heavily refactored
-// to work with API requests instead of console input.
-// For now, let's keep the originals for reference but they won't be used directly by main.go anymore.
-
-// CheckNext refactored to take user input and return result
-func (n *MusicalNote) CheckNext(userInput string) bool {
-	next := n.GetNext()
-	return strings.ToUpper(next) == strings.ToUpper(userInput)
-}
-
-func (n *MusicalNote) GetNext() string {
-	var next string
-	if n.Note == "C6" {
-		next = "Db6" // Or potentially a custom "end of range" note
-	} else {
-		next = NotesArray[n.Idx+1]
-	}
-	return next
-}
-
-// CheckPrevious refactored to take user input and return result
-func (n *MusicalNote) CheckPrevious(userInput string) bool {
-	previous := n.GetPrevious()
-	return strings.ToUpper(previous) == strings.ToUpper(userInput)
-}
-
-func (n *MusicalNote) GetPrevious() string {
-	var previous string
-	if n.Note == "C2" {
-		previous = "B1" // Or potentially a custom "start of range" note
-	} else {
-		previous = NotesArray[n.Idx-1]
-	}
-	return previous
 }
 
 // CheckPosition refactored to take user input and return result
