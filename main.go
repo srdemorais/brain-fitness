@@ -1,26 +1,5 @@
 // $ curl -X POST http://localhost:8080/api/note/new
-// {"idx":3,"note":"Eb2","audioPath":"/audio/Eb2.mp3","nextNote":"E2","previousNote":"D2","position":3}
-
-// $ curl -X POST -H "Content-Type: application/json" -d '{
-//     "noteIdx": 7,
-//     "userNext": "Ab2",
-//     "userPrevious": "Gb2",
-//     "userPosition": 5
-// }' http://localhost:8080/api/note/check_text_position
-// {"nextCorrect":true,"previousCorrect":true,"positionCorrect":true}
-
-// curl -X POST \
-//      -H "Content-Type: application/json" \
-//      -d '{"noteIdx": 1}' \
-//      http://localhost:8080/api/note/prepare_sound_test
-
-// curl -X POST \
-//      -H "Content-Type: application/json" \
-//      -d '{
-//            "correctGuessPos": 2,
-//            "userSoundGuessPos": 2
-//          }' \
-//      http://localhost:8080/api/note/check_sound_guess
+// {"idx":3,"code":"Eb2","audioPath":"/audio/Eb2.mp3","position":3}
 
 package main
 
@@ -32,42 +11,6 @@ import (
 	"github.com/gin-gonic/gin"                         // Gin framework
 	"github.com/srdemorais/brain-fitness/musicalnotes" // Our local musicalnotes package
 )
-
-// --- Request and Response Structs for API Endpoints ---
-
-// CheckTextPositionRequest represents the JSON payload for checking text/position answers
-type CheckTextPositionRequest struct {
-	NoteIdx      int `json:"noteIdx"` // Index of the original note
-	UserPosition int `json:"userPosition"`
-}
-
-// CheckTextPositionResponse represents the JSON response for text/position checks
-type CheckTextPositionResponse struct {
-	PositionCorrect bool `json:"positionCorrect"`
-	CorrectPosition int  `json:"correctPosition,omitempty"` // omitempty means it won't be included if empty (i.e., if correct)
-}
-
-// PrepareSoundTestRequest represents the JSON payload for preparing the sound test
-type PrepareSoundTestRequest struct {
-	NoteIdx int `json:"noteIdx"` // Index of the original note
-}
-
-// PrepareSoundTestResponse represents the JSON response for preparing the sound test
-type PrepareSoundTestResponse struct {
-	GuessNotes      [6]musicalnotes.MusicalNote `json:"guessNotes"`      // The 6 notes to play
-	CorrectGuessPos int                         `json:"correctGuessPos"` // 0-indexed position of the correct note within GuessNotes
-}
-
-// CheckSoundGuessRequest represents the JSON payload for checking the sound guess
-type CheckSoundGuessRequest struct {
-	CorrectGuessPos   int `json:"correctGuessPos"`   // The original correct 0-indexed position from prepare_sound_test
-	UserSoundGuessPos int `json:"userSoundGuessPos"` // The user's 0-indexed guess
-}
-
-// CheckSoundGuessResponse represents the JSON response for the sound guess
-type CheckSoundGuessResponse struct {
-	SoundCorrect bool `json:"soundCorrect"`
-}
 
 // --- Main Server Setup ---
 
@@ -95,77 +38,12 @@ func main() {
 
 	// POST /api/note/new: Get a new random note for a round
 	router.POST("/api/note/new", func(c *gin.Context) {
-		note := musicalnotes.Init() // Generates a random note
+		note, err := musicalnotes.Init() // Generates a random note
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusOK, note) // Returns the MusicalNote struct as JSON
-	})
-
-	// POST /api/note/check_text_position: Check user's text and position answers
-	router.POST("/api/note/check_text_position", func(c *gin.Context) {
-		var req CheckTextPositionRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Re-initialize a MusicalNote based on the received index for checking
-		// This ensures we're checking against the correct, untampered backend data
-		currentNote := musicalnotes.MusicalNote{
-			Idx: req.NoteIdx,
-			// Other fields are not strictly needed for Check methods but good to have a complete object
-			Note: musicalnotes.GetNoteNameByIdx(req.NoteIdx), // Helper needed: see note below
-		}
-
-		// Perform checks
-		positionCorrect := currentNote.CheckPosition(req.UserPosition)
-
-		resp := CheckTextPositionResponse{
-			PositionCorrect: positionCorrect,
-		}
-
-		// If incorrect, provide the correct answer
-		if !positionCorrect {
-			resp.CorrectPosition = musicalnotes.GetNotePositionByIdx(req.NoteIdx) // Helper needed: see note below
-		}
-
-		c.JSON(http.StatusOK, resp)
-	})
-
-	// POST /api/note/prepare_sound_test: Get notes for the sound test
-	router.POST("/api/note/prepare_sound_test", func(c *gin.Context) {
-		var req PrepareSoundTestRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Create a dummy note just to use its GetGuessNotes method
-		dummyNote := musicalnotes.MusicalNote{Idx: req.NoteIdx}
-		guessNotes, correctPos := dummyNote.GetGuessNotes()
-
-		resp := PrepareSoundTestResponse{
-			GuessNotes:      guessNotes,
-			CorrectGuessPos: correctPos,
-		}
-
-		c.JSON(http.StatusOK, resp)
-	})
-
-	// POST /api/note/check_sound_guess: Check user's guess for the sound test
-	router.POST("/api/note/check_sound_guess", func(c *gin.Context) {
-		var req CheckSoundGuessRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		// The CheckSoundGuess logic is essentially comparing two integers
-		soundCorrect := (req.CorrectGuessPos == req.UserSoundGuessPos)
-
-		resp := CheckSoundGuessResponse{
-			SoundCorrect: soundCorrect,
-		}
-
-		c.JSON(http.StatusOK, resp)
 	})
 
 	// Start the server
